@@ -21,6 +21,8 @@
            socket.receive(nhan);
            String s = new String(nhan.getData() , 0 , nhan.getLength())  ;
 
+
+
            socket.close();
 
 

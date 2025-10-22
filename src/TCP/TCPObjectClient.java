@@ -1,6 +1,10 @@
 package TCP;
-import java.io.*;
+
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.Socket;
+
 /*
 [Mã câu hỏi (qCode): rrlDoUAB].  Một chương trình server cho phép kết nối qua giao thức TCP tại cổng 2209 (hỗ trợ thời gian giao tiếp tối đa cho mỗi yêu cầu là 5 giây). Yêu cầu là xây dựng một chương trình client tương tác với server sử dụng các luồng đối tượng (ObjectOutputStream/ObjectInputStream) theo kịch bản dưới đây:
 
@@ -15,59 +19,71 @@ c. Tính toán giá trị giảm giá theo price theo nguyên tắc: Giá trị 
 d. Đóng kết nối và kết thúc chương trình.
  */
 public class TCPObjectClient {
-    public static void main(String[] args) {
-        try (Socket socket = new Socket("203.162.10.109", 2209);
-             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())) {
-
-            // a. Gửi mã sinh viên + mã câu hỏi
-            String request = "B22DCCN290;rrlDoUAB";
-            oos.writeObject(request);
-            oos.flush();
-            System.out.println("Đã gửi: " + request);
-
-            // b. Nhận Product từ server
-            Product product = (Product) ois.readObject();
-            System.out.println("Nhận Product: " + product.getName() + ", price = " + product.getPrice());
-
-            // c. Tính tổng chữ số phần nguyên của price
-            int sumDigits = 0;
-            long integerPart = (long) product.getPrice();
-            while (integerPart > 0) {
-                sumDigits += integerPart % 10;
-                integerPart /= 10;
-            }
-            product.setDiscount(sumDigits);
-            System.out.println("Tổng chữ số phần nguyên = " + sumDigits);
-
-            // d. Gửi lại Product với discount mới
-            oos.writeObject(product);
-            oos.flush();
-            System.out.println("Đã gửi Product với discount mới.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static String suaten(String s) {
+        String ss[] = s.trim().split("\\s+") ;
+        String tmp = ss[ss.length - 1] + " " ;
+        for(int i = 1 ; i < ss.length - 1 ; i++) {
+            tmp += ss[i] ;
+            tmp += " " ;
         }
+        tmp += ss[0] ;
+        return tmp ;
+    }
+    public static int suagia(int gia) {
+        String s = Integer.toString(gia) ;
+        StringBuilder ss = new StringBuilder(s).reverse() ;
+        return Integer.parseInt(ss.toString()) ;
+
+    }
+
+    public static void main(String[] args) throws Exception{
+        Socket socket = new Socket("203.162.10.109" , 2209)  ;
+        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()) ;
+        ObjectInputStream in = new ObjectInputStream(socket.getInputStream())  ;
+
+        String ma = "B22DCCN290;B0kAanAU" ;
+        out.writeObject(ma);
+        out.flush();
+
+        System.out.println("Da gui ma " + ma);
+
+        Laptop laptop = (Laptop) in.readObject() ;
+        System.out.println(laptop);
+
+        laptop.name = suaten(laptop.name) ;
+        laptop.quantity = suagia(laptop.quantity)  ;
+
+        out.writeObject(laptop);
+
+        out.flush();
+
+        System.out.println(laptop);
+
+
+
     }
 }
 
-// Class Product KHÔNG khai báo public
-class Product implements Serializable {
-    private static final long serialVersionUID = 20231107;
-    private int id;
-    private String name;
-    private double price;
-    private int discount;
+class Laptop implements Serializable {
+    private static final long serialVersionUID = 20150711L;
+    int id ;
+    String code , name ;
+    int quantity ;
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public Laptop(int id, String code, String name, int quantity) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.quantity = quantity;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-
-    public int getDiscount() { return discount; }
-    public void setDiscount(int discount) { this.discount = discount; }
+    @Override
+    public String toString() {
+        return "Laptop{" +
+                "id=" + id +
+                ", code='" + code + '\'' +
+                ", name='" + name + '\'' +
+                ", quantity=" + quantity +
+                '}';
+    }
 }
